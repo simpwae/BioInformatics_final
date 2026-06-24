@@ -12,9 +12,9 @@
 Glicksberg BS, Gehlenborg N, Zitnik M. "A foundation model for clinician-centered drug
 repurposing." *Nature Medicine*, 2024. DOI: 10.1038/s41591-024-03233-x
 
-**Primary sources (both citable as the actual published article):**
+**Primary sources:**
 - Preprint: PMC11326339 (medRxiv v4, open-access via NIH preprint pilot) — RETRIEVED AND READ
-- Peer-reviewed: PMC11645266 (*Nature Medicine* final version) — NOT YET RETRIEVED; supplementary tables may carry slightly different final numbers
+- Peer-reviewed: PMC11645266 (*Nature Medicine* final version) — MAIN TEXT READ; supplementary file (MOESM1 ESM, "41591_2024_3233_MOESM1_ESM.pdf") not retrieved (CAPTCHA-blocked; requires direct browser download)
 
 **One-line takeaway:** A GNN pretrained on a biomedical KG with a disease-similarity metric-learning
 module predicts drug indications and contraindications for diseases with no approved therapy at train
@@ -46,16 +46,17 @@ Note: our downloaded kg.csv has 129,375 nodes vs. paper's 123,527 — discrepanc
 - Relative gain: +4.3% over HAN
 - Note: HAN, HGT, and RGCN are all in the GNN family. HAN was the best GNN baseline for standard-split indications. A plain RGCN or no-message-passing model would score lower; our `gnn_no_kg` is not a direct comparator to HAN.
 
-#### Zero-shot split — VERIFIED relative gains from PMC11326339, absolute values NOT in main text
-- Random zero-shot split (Fig 2d): **+19.0% AUPRC for indications, +23.9% for contraindications** over next-best method
-- Nine disease-area splits: indication gains 0.5%–59.3% (mean 25.72%); contraindication gains 11.8%–35.6% (mean 18.67%); BioBERT was best baseline for indications in 7/9 areas
-- Absolute zero-shot AUPRC: in Supplementary Tables S1/S2 — NOT YET RETRIEVED
+#### Zero-shot split — VERIFIED relative gains from BOTH versions; absolute values only in supplementary file
+- Random zero-shot split (Fig 2d): **+19.0% AUPRC for indications, +23.9% for contraindications** over next-best method. Confirmed in both PMC11326339 (preprint) and PMC11645266 (peer-reviewed) — same figures in both.
+- Nine disease-area splits: indication gains 0.5%–59.3% (mean 25.72%); contraindication gains 11.8%–35.6% (mean 18.67%). Confirmed in both versions.
+- **Absolute zero-shot AUPRC: NOT IN THE MAIN TEXT OF EITHER VERSION.** Both versions state explicitly that raw per-model scores are in Supplementary Tables 1 and 2. The body reports relative gains only. This is a settled fact — not a gap awaiting retrieval from the main article.
+- To get absolute values: download the SI file (MOESM1 ESM) from PMC11645266 or Springer static path. If pasted here, the correct rows to extract are labeled with the random zero-shot split and individual disease-area folds; report with 95% CI across five splits.
 
-#### Discrepancy requiring honest handling (do not collapse into one number)
-- Abstract / project page states: +49.2% (indications), +35.1% (contraindications) for zero-shot
-- Main text / Fig 2d states: +19.0% / +23.9% for the random zero-shot split
-- The preprint text (PMC11326339) does NOT reconcile which split the 49.2 / 35.1 figures attach to
-- **DO NOT use 49.2 / 35.1 in the paper_reported table.** Use 19.0 / 23.9 (Fig 2d) or retrieve the actual AUPRC values from Suppl. Tables S1/S2 (PMC11645266 or supplementary PDF).
+#### 49.2% / 35.1% discrepancy — CONFIRMED SETTLED (both versions read)
+- The peer-reviewed abstract (PMC11645266) states +49.2% (indications), +35.1% (contraindications) for "stringent zero-shot evaluation."
+- No figure or paragraph in the main text of either version maps a number to exactly 49.2 / 35.1. The in-text zero-shot gains are 19.0/23.9 (Fig 2d, random zero-shot) and the disease-area ranges above.
+- **49.2 / 35.1 is the abstract's headline aggregate — it cannot be tied to a specific split from the article body. Do not use as a per-split figure in the paper_reported table.**
+- If cited at all, label it: "Abstract headline, Huang et al. 2024 Nat Med; split not specified in main text."
 
 #### Explainer faithfulness (from PMC11326339)
 - Top ~14.9% of edges by importance: AUPRC = 0.886 (vs 0.890 full graph)
@@ -76,7 +77,7 @@ Note: our downloaded kg.csv has 129,375 nodes vs. paper's 123,527 — discrepanc
 | Q2 | Two-phase training (pretrain + finetune) is the baseline procedure to compare against. |
 | Q3 | Paper's framing: zero-shot preferred because most diseases, especially rare ones, have no labeled drugs. 92% of PrimeKG diseases have no indication edge. |
 | Q4 | This paper's output predictions are what the case studies should use. |
-| Q5 | Published numbers: TxGNN standard ind AUPRC=0.913, HAN=0.873. Zero-shot absolutes: retrieve from Suppl. S1/S2. |
+| Q5 | Standard: TxGNN 0.913, HAN 0.873 (main text, both versions). Zero-shot absolutes: only in Suppl. S1/S2 (SI file, not readable online); relative gains (+19.0%/+23.9%) are the best citable main-text figures. |
 | Q6 | The paper's gating step uses FIXED degree-based exponential gating (λ=0.7), not learnable attention — because learnable attention was found ineffective. This independently supports our ablation finding. |
 
 ---
@@ -248,16 +249,14 @@ with pure structure methods at much lower cost; but again on general KGs, not bi
 ## What is NOT Known (honest gaps, updated 2026-06-24)
 
 1. **Absolute AUPRC for TxGNN and baselines on zero-shot split.**
-   Main text (PMC11326339) gives only relative gains for zero-shot (+19.0% / +23.9%). Absolute values are in Supplementary Tables S1/S2. Not yet retrieved.
-   → Action: Access PMC11645266 (peer-reviewed version) or the preprint supplementary PDF to extract these numbers for `paper_reported` column.
+   Both versions (PMC11326339 preprint and PMC11645266 peer-reviewed) give only relative gains in the main text. Absolute values exist only in Supplementary Tables 1–2 (MOESM1 ESM), which requires directly downloading the SI file — not readable via web fetch (CAPTCHA-blocked). The relative gains (+19.0% indication, +23.9% contraindication, random zero-shot split) are the most that can be cited from the article body. This is a settled sourcing limit, not a gap to fill from the main text.
+   → Action if needed: download 41591_2024_3233_MOESM1_ESM.pdf from PMC11645266 "Supplementary information" section. Extract rows for random zero-shot split with 95% CI across five splits; label each row with its exact split before adding to paper_reported column.
 
-2. **Node count discrepancy: paper says 123,527; our kg.csv has 129,375.**
-   Likely due to version differences or isolated nodes excluded from the paper's filtered graph. The paper's filtered counts are from Methods (PMC11326339). Our data is what was actually used for training.
-   → No action required for report; note the discrepancy in the data card.
+2. **Node count discrepancy: paper says 123,527 nodes; our kg.csv has 129,375.**
+   Likely version difference or isolated nodes excluded from paper's filtered graph. No impact on results. Note in data card only.
 
 3. **QA-GNN and DRAGON accuracy numbers per task.**
    Background context only, not primary benchmarks. No action needed.
 
-4. **Peer-reviewed Nature Medicine version (PMC11645266) vs preprint (PMC11326339).**
-   Numbers may differ in the final published supplementary tables.
-   → If the paper_reported column is to be finalized, retrieve Suppl. S1/S2 from PMC11645266.
+4. **49.2% / 35.1% abstract headline — settled as unresolvable from article body.**
+   Both versions confirmed: these figures appear in the abstract but no main-text figure or paragraph assigns them to a specific split. Do not use as a per-split number. If cited: "Abstract headline, Huang et al. 2024 Nat Med; split not specified in main text."

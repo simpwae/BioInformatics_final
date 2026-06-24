@@ -108,7 +108,7 @@ See Section 4 for full case study content.
 | single_stage | 0.706 ± 0.033 | — | 0.833 ± 0.019 | 130.7 |
 | joint_contrastive | 0.670 ± 0.038 | — | 0.854 ± 0.016 | 97.1 |
 
-² Absolute zero-shot AUPRC values are in Supplementary Tables S1/S2 of Huang et al. (2024) — not yet retrieved. The paper reports +19.0% indication / +23.9% contraindication relative gains over the next-best baseline on the random zero-shot split (Fig 2d, PMC11326339). The abstract headline (+49.2% / +35.1%) does not map to a named split in the preprint text and is not used here.
+² Absolute zero-shot AUPRC values are in Supplementary Tables 1–2 (MOESM1 ESM) only — confirmed absent from the main text of both the preprint (PMC11326339) and the peer-reviewed article (PMC11645266). Both versions give the same relative gains only: +19.0% indication / +23.9% contraindication over next-best, random zero-shot split (Fig 2d). The abstract headline (+49.2% / +35.1%) appears in both versions but is not tied to any specific split in the main text; it is not used as a per-split figure. To fill this cell with absolute values, download the SI file (MOESM1 ESM) from PMC11645266 and extract the relevant rows from Suppl. Table 1.
 
 *Source (scaled_reproduction): `results/metrics/comparison_table.csv`. Source (paper_reported): Huang et al. (2024), "A foundation model for clinician-centered drug repurposing," Nature Medicine, PMC11326339.*
 
