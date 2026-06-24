@@ -59,7 +59,7 @@ This result is reported as-is, per ground rule 1.2. The hypothesis "KG helps" is
 
 ## 3.3 Q3 — Why Is Zero-Shot Preferred?
 
-**Conceptual answer**: 13,075 of 17,080 diseases in PrimeKG (76.5%) have zero approved therapies in the training data. A supervised model has no labels for these diseases. Zero-shot generalization via disease similarity is the only tractable path for rare disease coverage.
+**Conceptual answer**: Huang et al. (2024) report that 92% of PrimeKG diseases have no indication edge (PMC11326339). On our downloaded data, 9,388 unique indication pairs cover 17,080 diseases, consistent with that figure. A supervised model has no labels for unlabeled diseases. Zero-shot generalization via disease similarity is the only tractable path for rare disease coverage.
 
 **Empirical**: Degradation curve generated and written to `results/figures/degradation_curve.png`. Data in `results/metrics/degradation_curve_data.json`.
 
@@ -88,25 +88,29 @@ See Section 4 for full case study content.
 
 ### Standard Split
 
-| Model | AUPRC ind (mean±std) | AUPRC contra (mean±std) | AUROC ind | Wall-clock (s) |
-|-------|---------------------|------------------------|-----------|----------------|
-| gnn_no_kg | 0.893 ± 0.006 | 0.945 ± 0.002 | 0.972 | 0.7 |
-| gnn_kg | 0.825 ± 0.022 | 0.895 ± 0.026 | 0.972 | 145.5 |
-| txgnn_two_phase | 0.816 ± 0.012 | 0.899 ± 0.010 | 0.972 | 183.8 |
-| single_stage | 0.723 ± 0.005 | 0.863 ± 0.012 | 0.950 | 100.3 |
-| joint_contrastive | 0.739 ± 0.019 | 0.862 ± 0.014 | 0.956 | 95.9 |
+| Model | AUPRC ind (scaled_reproduction) | AUPRC ind (paper_reported) | AUPRC contra (scaled_reproduction) | Wall-clock (s) |
+|-------|---------------------------------|----------------------------|-------------------------------------|----------------|
+| gnn_no_kg | 0.893 ± 0.006 | — | 0.945 ± 0.002 | 0.7 |
+| gnn_kg (HAN equiv.) | 0.825 ± 0.022 | 0.873 ¹ | 0.895 ± 0.026 | 145.5 |
+| txgnn_two_phase | 0.816 ± 0.012 | **0.913** ¹ | 0.899 ± 0.010 | 183.8 |
+| single_stage | 0.723 ± 0.005 | — | 0.863 ± 0.012 | 100.3 |
+| joint_contrastive | 0.739 ± 0.019 | — | 0.862 ± 0.014 | 95.9 |
+
+¹ Huang et al. (2024), PMC11326339 (preprint); HAN was the best GNN-family baseline in the paper. Peer-reviewed final (PMC11645266) not yet retrieved — numbers may differ slightly.
 
 ### Zero-Shot Split
 
-| Model | AUPRC ind (mean±std) | AUPRC contra (mean±std) | AUROC ind | Wall-clock (s) |
-|-------|---------------------|------------------------|-----------|----------------|
-| gnn_no_kg | 0.704 ± 0.027 | 0.725 ± 0.008 | 0.934 | 0.2 |
-| gnn_kg | 0.714 ± 0.026 | 0.831 ± 0.016 | 0.954 | 71.3 |
-| txgnn_two_phase | 0.736 ± 0.011 | 0.832 ± 0.010 | 0.950 | 71.6 |
-| single_stage | 0.706 ± 0.033 | 0.833 ± 0.019 | 0.951 | 130.7 |
-| joint_contrastive | 0.670 ± 0.038 | 0.854 ± 0.016 | 0.944 | 97.1 |
+| Model | AUPRC ind (scaled_reproduction) | AUPRC ind (paper_reported) | AUPRC contra (scaled_reproduction) | Wall-clock (s) |
+|-------|---------------------------------|----------------------------|-------------------------------------|----------------|
+| gnn_no_kg | 0.704 ± 0.027 | — | 0.725 ± 0.008 | 0.2 |
+| gnn_kg | 0.714 ± 0.026 | — | 0.831 ± 0.016 | 71.3 |
+| txgnn_two_phase | 0.736 ± 0.011 | [see Suppl. S1/S2] ² | 0.832 ± 0.010 | 71.6 |
+| single_stage | 0.706 ± 0.033 | — | 0.833 ± 0.019 | 130.7 |
+| joint_contrastive | 0.670 ± 0.038 | — | 0.854 ± 0.016 | 97.1 |
 
-*Source: `results/metrics/comparison_table.csv`*
+² Absolute zero-shot AUPRC values are in Supplementary Tables S1/S2 of Huang et al. (2024) — not yet retrieved. The paper reports +19.0% indication / +23.9% contraindication relative gains over the next-best baseline on the random zero-shot split (Fig 2d, PMC11326339). The abstract headline (+49.2% / +35.1%) does not map to a named split in the preprint text and is not used here.
+
+*Source (scaled_reproduction): `results/metrics/comparison_table.csv`. Source (paper_reported): Huang et al. (2024), "A foundation model for clinician-centered drug repurposing," Nature Medicine, PMC11326339.*
 
 **Summary of Q5 findings**:
 - On the standard split, gnn_no_kg achieves the highest indication AUPRC (0.893). Two-phase TxGNN (0.816) is 7.7 points below the no-KG baseline.

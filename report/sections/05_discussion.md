@@ -24,7 +24,7 @@ The joint contrastive approach shows higher zero-shot contraindication AUPRC (0.
 
 ## 5.3 Zero-Shot vs. Standard Coverage (Q3)
 
-76.5% of PrimeKG diseases (13,075 of 17,080) have no approved therapy in the training data. A standard supervised model has no labels for any of these. This is the motivating constraint for zero-shot prediction — it is not a design preference but a necessity given the data.
+Huang et al. (2024) report that 92% of PrimeKG diseases have no indication edge (PMC11326339). On our downloaded PrimeKG, 9,388 unique indication pairs cover 17,080 diseases, consistent with the ~8% coverage figure. A standard supervised model has no labels for the remaining ~92%. This is the motivating constraint for zero-shot prediction — it is not a design preference but a necessity given the data.
 
 The empirical degradation curve (`results/figures/degradation_curve.png`) confirms this: GNN baseline AUPRC drops from 0.8–0.9 (diseases with many training edges) toward the zero-edge regime, while the zero-shot TxGNN model maintains 0.74 AUPRC for all test diseases regardless of training edge count.
 
@@ -40,9 +40,11 @@ The Q6 ablation shows that removing HGT attention (mean aggregation instead) imp
 
 The hypothesis that attention is optional is not confirmed in a simple sense: it is stronger than "optional" — attention actively hurts in this setup. The disease-similarity module (not the attention mechanism) is the component that matters: removing similarity (txgnn_no_sim) reduces AUPRC from 0.736 to 0.726.
 
-A likely explanation: HGT attention has O(num_heads × hidden_dim²) parameters per layer. With only 64 dimensions and limited training data, the attention weights overfit. Mean aggregation, having no learned parameters, provides more stable aggregation. The published 512-dim model may behave differently given its 8× larger embedding capacity.
+This result has independent support in the published paper. Huang et al. (2024) report that a learnable attention mechanism for the gating step was tested and found ineffective because it overweighted the original embeddings for well-represented diseases. The paper therefore replaced it with a fixed degree-based exponential gating function (λ=0.7), not a learned attention layer. Source: Methods, PMC11326339. Our ablation independently arrives at the same conclusion — the attention mechanism does not help and, in the scaled (64-dim) setting, actively hurts.
 
-This finding is specific to: scaled reproduction, RTX 4060 8 GB VRAM, hidden_dim=64, 2 layers, PrimeKG, seeds [42, 0, 1]. It is not a claim about HGT attention in general or about the published TxGNN.
+A likely mechanistic explanation for the scaled-reproduction result: HGT attention has O(num_heads × hidden_dim²) parameters per layer. With only 64 dimensions and limited training data, the attention weights overfit. Mean aggregation, having no learned parameters, provides more stable neighborhood aggregation. The fixed gating function in the published model (λ=0.7) is also parameter-free, consistent with this.
+
+This finding is specific to: scaled reproduction, RTX 4060 8 GB VRAM, hidden_dim=64, 2 layers, PrimeKG, seeds [42, 0, 1]. The scope of the claim is the ablation result, not a claim about HGT attention in general. The paper's own choice of fixed gating is noted as convergent evidence, not as proof.
 
 ## 5.6 Scaled Reproduction Limitations
 
