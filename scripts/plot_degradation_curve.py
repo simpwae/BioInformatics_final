@@ -21,28 +21,29 @@ ROOT = Path(__file__).resolve().parent.parent
 METRICS_DIR = ROOT / "results" / "metrics"
 FIGURES_DIR = ROOT / "results" / "figures"
 
-# Models to compare (must have per_disease_results in their zero-shot JSON)
+# Models to compare (must have per_disease_results in their result JSONs)
+# Each entry: (result_dir, result_filename, split_used_for_edge_counts)
 MODELS = {
-    "gnn_baseline": ROOT / "results" / "gnn",
-    "txgnn":        ROOT / "results" / "txgnn",
+    "gnn_standard":   (ROOT / "results" / "gnn",   "gnn_baseline", "standard"),
+    "gnn_zeroshot":   (ROOT / "results" / "gnn",   "gnn_baseline", "zeroshot"),
+    "txgnn_zeroshot": (ROOT / "results" / "txgnn", "txgnn",        "zeroshot"),
 }
 SEED = 42
-SPLIT = "zeroshot"
 
 
-def load_per_disease(model_name: str, results_dir: Path) -> list:
-    path = results_dir / SPLIT / f"seed_{SEED}" / f"{model_name}.json"
+def load_per_disease(results_dir: Path, result_file: str, split: str) -> list:
+    path = results_dir / split / f"seed_{SEED}" / f"{result_file}.json"
     if not path.exists():
-        print(f"[warn] {path} not found — skipping {model_name}")
+        print(f"[warn] {path} not found — skipping")
         return []
     with open(path) as f:
         data = json.load(f)
     return data.get("per_disease_results", [])
 
 
-def load_train_edge_counts(seed: int = SEED) -> dict:
+def load_train_edge_counts(split: str, seed: int = SEED) -> dict:
     """Returns {disease_id: n_train_treatment_edges}."""
-    train_path = ROOT / "data" / "splits" / SPLIT / f"seed_{seed}" / "train.csv"
+    train_path = ROOT / "data" / "splits" / split / f"seed_{seed}" / "train.csv"
     if not train_path.exists():
         return {}
     train = pd.read_csv(train_path)
@@ -52,16 +53,15 @@ def load_train_edge_counts(seed: int = SEED) -> dict:
 
 
 def build_curve_data():
-    train_counts = load_train_edge_counts()
-
     all_records = []
-    for model_name, results_dir in MODELS.items():
-        per_disease = load_per_disease(model_name, results_dir)
+    for model_label, (results_dir, result_file, split) in MODELS.items():
+        per_disease = load_per_disease(results_dir, result_file, split)
+        train_counts = load_train_edge_counts(split)
         for row in per_disease:
             disease_id = str(row["disease_id"])
             n_train = train_counts.get(disease_id, 0)
             all_records.append({
-                "model": model_name,
+                "model": model_label,
                 "disease_id": disease_id,
                 "relation": row["relation"],
                 "n_train_edges": n_train,
@@ -119,7 +119,7 @@ def plot_curve(records: list):
                 alpha=0.15,
             )
 
-        ax.set_title(f"{rel.capitalize()} — AUPRC vs Training Edges\n(Q3: zero-shot split, seed={SEED})")
+        ax.set_title(f"{rel.capitalize()} — AUPRC vs Training Edges\n(Q3: seed={SEED}, standard=gnn; zeroshot=gnn+txgnn)")
         ax.set_xlabel("N training treatment edges per disease")
         ax.set_ylabel("AUPRC")
         ax.legend()

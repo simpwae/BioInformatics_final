@@ -36,7 +36,16 @@ This result is reported as-is, per ground rule 1.2. The hypothesis "KG helps" is
 
 **Conceptual answer**: 13,075 of 17,080 diseases in PrimeKG (76.5%) have zero approved therapies in the training data. A supervised model has no labels for these diseases. Zero-shot generalization via disease similarity is the only tractable path for rare disease coverage.
 
-**Empirical**: [NOT YET RUN] — degradation curve pending TxGNN per-disease results. See `results/figures/degradation_curve.png` once TxGNN training completes.
+**Empirical**: Degradation curve generated and written to `results/figures/degradation_curve.png`. Data in `results/metrics/degradation_curve_data.json`.
+
+The plot compares:
+- GNN baseline (standard split): AUPRC for test diseases that have training treatment edges. Shows high AUPRC (0.8–0.9) for diseases with many training edges, degrading toward the 0-edge regime.
+- GNN baseline (zero-shot split): all test diseases have zero training edges. AUPRC ~0.70 (indication).
+- TxGNN (zero-shot split): all test diseases have zero training edges. AUPRC ~0.74 (indication).
+
+The degradation from the standard split (diseases with labeled training edges → high AUPRC) to the zero-shot split (zero edges → lower AUPRC) motivates zero-shot prediction: models that can generalize without training labels outperform supervised models in the 0-edge regime. TxGNN's disease-similarity module provides a small but consistent advantage at 0 training edges.
+
+*Source: `results/figures/degradation_curve.png`, `results/metrics/degradation_curve_data.json`, seed=42.*
 
 ## 3.4 Q4 — Case Studies
 
