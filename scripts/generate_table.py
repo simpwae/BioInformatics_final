@@ -49,7 +49,9 @@ MODEL_PATHS = {
 }
 
 
-def load(path: Path):
+def load(path: Path, fallback: Path = None):
+    if not path.exists() and fallback and fallback.exists():
+        path = fallback
     if not path.exists():
         return None
     with open(path) as f:
@@ -72,7 +74,13 @@ def build_comparison_table():
     rows = []
     for model_name, path_fn in MODEL_PATHS.items():
         for split in SPLITS:
-            results = [load(path_fn(split, s)) for s in SEEDS]
+            # txgnn_attn_on falls back to main txgnn results if ablation re-run hasn't happened
+            fallback_fn = None
+            if model_name == "txgnn_attn_on":
+                fallback_fn = lambda s, sp=split: RESULTS / "txgnn" / sp / f"seed_{s}" / "txgnn.json"
+            results = [load(path_fn(split, s),
+                           fallback_fn(s) if fallback_fn else None)
+                       for s in SEEDS]
             available = [r for r in results if r is not None]
 
             base = {
@@ -145,7 +153,12 @@ def build_q6_ablation_table():
     for variant in ["txgnn_attn_on", "txgnn_attn_off"]:
         path_fn = MODEL_PATHS[variant]
         for split in SPLITS:
-            results = [load(path_fn(split, s)) for s in SEEDS]
+            fallback_fn = None
+            if variant == "txgnn_attn_on":
+                fallback_fn = lambda s, sp=split: RESULTS / "txgnn" / sp / f"seed_{s}" / "txgnn.json"
+            results = [load(path_fn(split, s),
+                           fallback_fn(s) if fallback_fn else None)
+                       for s in SEEDS]
             available = [r for r in results if r is not None]
             if not available:
                 rows.append({"variant": variant, "split": split, "auprc_ind_mean": "[NOT YET RUN]"})
