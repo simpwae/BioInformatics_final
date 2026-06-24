@@ -88,29 +88,32 @@ See Section 4 for full case study content.
 
 ### Standard Split
 
-| Model | AUPRC ind (scaled_reproduction) | AUPRC ind (paper_reported) | AUPRC contra (scaled_reproduction) | Wall-clock (s) |
-|-------|---------------------------------|----------------------------|-------------------------------------|----------------|
-| gnn_no_kg | 0.893 ± 0.006 | — | 0.945 ± 0.002 | 0.7 |
-| gnn_kg (HAN equiv.) | 0.825 ± 0.022 | 0.873 ¹ | 0.895 ± 0.026 | 145.5 |
-| txgnn_two_phase | 0.816 ± 0.012 | **0.913** ¹ | 0.899 ± 0.010 | 183.8 |
-| single_stage | 0.723 ± 0.005 | — | 0.863 ± 0.012 | 100.3 |
-| joint_contrastive | 0.739 ± 0.019 | — | 0.862 ± 0.014 | 95.9 |
+| Model | AUPRC ind (scaled_reproduction) | AUPRC ind (paper_reported) | AUPRC contra (scaled_reproduction) | AUPRC contra (paper_reported) | Wall-clock (s) |
+|-------|---------------------------------|----------------------------|-------------------------------------|-------------------------------|----------------|
+| gnn_no_kg | 0.893 ± 0.006 | — | 0.945 ± 0.002 | — | 0.7 |
+| HAN (paper best GNN) | — | 0.87 ± 0.18 ¹ | — | **0.84 ± 0.00** ¹ | — |
+| gnn_kg (HGT-equiv.) | 0.825 ± 0.022 | — | 0.895 ± 0.026 | — | 145.5 |
+| txgnn_two_phase | 0.816 ± 0.012 | **0.91 ± 0.02** ¹ | 0.899 ± 0.010 | 0.82 ± 0.01 ¹ | 183.8 |
+| single_stage | 0.723 ± 0.005 | — | 0.863 ± 0.012 | — | 100.3 |
+| joint_contrastive | 0.739 ± 0.019 | — | 0.862 ± 0.014 | — | 95.9 |
 
-¹ Huang et al. (2024), PMC11326339 (preprint); HAN was the best GNN-family baseline in the paper. Peer-reviewed final (PMC11645266) not yet retrieved — numbers may differ slightly.
+Note: on standard contraindication, HAN (0.84) outperforms TxGNN (0.82) in the paper. TxGNN's published gain (+4.3%) refers to indications only.
 
-### Zero-Shot Split
+### Zero-Shot Split (random zero-shot)
 
-| Model | AUPRC ind (scaled_reproduction) | AUPRC ind (paper_reported) | AUPRC contra (scaled_reproduction) | Wall-clock (s) |
-|-------|---------------------------------|----------------------------|-------------------------------------|----------------|
-| gnn_no_kg | 0.704 ± 0.027 | — | 0.725 ± 0.008 | 0.2 |
-| gnn_kg | 0.714 ± 0.026 | — | 0.831 ± 0.016 | 71.3 |
-| txgnn_two_phase | 0.736 ± 0.011 | [see Suppl. S1/S2] ² | 0.832 ± 0.010 | 71.6 |
-| single_stage | 0.706 ± 0.033 | — | 0.833 ± 0.019 | 130.7 |
-| joint_contrastive | 0.670 ± 0.038 | — | 0.854 ± 0.016 | 97.1 |
+| Model | AUPRC ind (scaled_reproduction) | AUPRC ind (paper_reported) | AUPRC contra (scaled_reproduction) | AUPRC contra (paper_reported) | Wall-clock (s) |
+|-------|---------------------------------|----------------------------|-------------------------------------|-------------------------------|----------------|
+| gnn_no_kg | 0.704 ± 0.027 | — | 0.725 ± 0.008 | — | 0.2 |
+| RGCN (paper best contra) | — | — | — | 0.64 ± 0.03 ¹ | — |
+| BioBERT (paper best ind) | — | 0.76 ± 0.03 ¹ | — | — | — |
+| gnn_kg | 0.714 ± 0.026 | — | 0.831 ± 0.016 | — | 71.3 |
+| txgnn_two_phase | 0.736 ± 0.011 | **0.90 ± 0.02** ¹ | 0.832 ± 0.010 | **0.80 ± 0.01** ¹ | 71.6 |
+| single_stage | 0.706 ± 0.033 | — | 0.833 ± 0.019 | — | 130.7 |
+| joint_contrastive | 0.670 ± 0.038 | — | 0.854 ± 0.016 | — | 97.1 |
 
-² Absolute zero-shot AUPRC values are in Supplementary Tables 1–2 (MOESM1 ESM) only — confirmed absent from the main text of both the preprint (PMC11326339) and the peer-reviewed article (PMC11645266). Both versions give the same relative gains only: +19.0% indication / +23.9% contraindication over next-best, random zero-shot split (Fig 2d). The abstract headline (+49.2% / +35.1%) appears in both versions but is not tied to any specific split in the main text; it is not used as a per-split figure. To fill this cell with absolute values, download the SI file (MOESM1 ESM) from PMC11645266 and extract the relevant rows from Suppl. Table 1.
+¹ Huang et al. (2024), "A foundation model for clinician-centered drug repurposing," *Nature Medicine*. Source: Supplementary Table S1 (indication AUPRC) and Table S2 (contraindication AUPRC), MOESM1 ESM. Values are mean ± std; "Random" row = standard split, "Zero-shot" row = random zero-shot split. Main text (p.1) gives TxGNN standard indication as 0.913 (3 sig. figs.); supplementary table shows 0.91±0.02 (2 d.p.). The main-text figure is used where it appears. Abstract headline (+49.2% / +35.1%) is not tied to any specific split in either version and is not used here.
 
-*Source (scaled_reproduction): `results/metrics/comparison_table.csv`. Source (paper_reported): Huang et al. (2024), "A foundation model for clinician-centered drug repurposing," Nature Medicine, PMC11326339.*
+*Source (scaled_reproduction): `results/metrics/comparison_table.csv`. Source (paper_reported): Huang et al. (2024), Nature Medicine, Supplementary Tables S1–S2 (MOESM1 ESM, retrieved from the SI file directly).*
 
 **Summary of Q5 findings**:
 - On the standard split, gnn_no_kg achieves the highest indication AUPRC (0.893). Two-phase TxGNN (0.816) is 7.7 points below the no-KG baseline.

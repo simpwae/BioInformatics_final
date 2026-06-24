@@ -28,17 +28,22 @@ time (zero-shot), and outperforms prior GNN baselines substantially on that sett
 - Two-phase training:
   - Phase 1 (`pretrain()`): self-supervised link prediction over all edge types in the KG.
   - Phase 2 (`finetune()`): drug-disease relation prediction with a disease-similarity metric-learning module.
-- Gating mechanism for combining similarity-propagated embeddings: **fixed degree-based exponential gating (λ=0.7), NOT learnable attention.** The paper explicitly states that a learnable attention mechanism was tested and found ineffective because it overweighted the original embeddings for well-represented diseases. They replaced it with the fixed degree-based gating function. Source: Methods section, PMC11326339.
+- Gating mechanism for combining similarity-propagated embeddings: **fixed degree-based exponential gating, NOT learnable attention.** Exact quote from main paper (s41591-024-03233-x.pdf, p.15, Methods): *"Use of a learnable attention mechanism is ineffective, because it overvalues the original embeddings for well-represented diseases, neglecting the auxiliary embedding. Alternatively, we introduced an approach that determines weighting based on the degree of node connectivity |𝒩ᵣᵢ| of the queried drug–disease pair."* The scalar uses an inflated exponential distribution density function (λ parameter specified in the equation; lambda=0.7 cited from PMC11326339 preprint where formula text was extractable). Source: Methods, both versions.
 - Pre-trained on PrimeKG: 17,080 clinically-recognized diseases, 7,957 therapeutic candidates.
 
-#### KG statistics (from Methods, PMC11326339 — VERIFIED)
-- Total nodes: 123,527
-- Total edges: 8,063,026 (directed; our kg.csv has 8,100,498 because it includes both directions of each pair — reconciled: 18,776/2 = 9,388 ✓, 61,350/2 = 30,675 ✓)
-- Node types: 10; edge/relation types: 29
-- Indications: 9,388 unique pairs; contraindications: 30,675 unique pairs
-- 92% of diseases have no indication edge
+#### KG statistics — TWO SOURCES, ONE DISCREPANCY (document honestly)
 
-Note: our downloaded kg.csv has 129,375 nodes vs. paper's 123,527 — discrepancy may reflect version differences or isolated nodes included in the download but excluded from the paper's filtered graph. Numbers from the paper go in `paper_reported`; our data is what models were actually trained on.
+**Main text (s41591-024-03233-x.pdf, p.14):** 123,527 nodes, 8,063,026 edges, 10 node types, 29 edge types.
+
+**Supplementary Table S8 (MOESM1 ESM, p.35):** 129,375 total nodes. Breakdown:
+biological_process 28,642 | protein 27,671 | disease 17,080 | phenotype 15,311 | anatomy 14,035 | molecular_function 11,169 | drug 7,957 | cellular_component 4,176 | pathway 2,516 | exposure 818.
+
+Our downloaded kg.csv: **129,375 nodes** (matches Supplementary Table S8 exactly).
+
+Reconciliation: The main text figure (123,527) is smaller than the supplementary table (129,375). Likely the main text counts only nodes that appear in at least one edge in the processed/filtered graph, while the supplementary table counts all nodes including isolated ones. The supplementary Table S8 is the authoritative breakdown; the main text is the filtered-graph count. Both are from the same paper. Our data matches the supplementary figure.
+
+- Indications: 9,388 unique pairs; contraindications: 30,675 unique pairs (paper, undirected). Our kg.csv: 18,776 indication rows, 61,350 contraindication rows (directed, each pair twice) — reconciled: 18,776/2 = 9,388 ✓
+- 92% of diseases have no indication edge (confirmed: main paper text)
 
 #### Standard split (test diseases *can* have training treatment edges) — VERIFIED from PMC11326339
 - TxGNN AUPRC (indications): **0.913**
@@ -46,11 +51,48 @@ Note: our downloaded kg.csv has 129,375 nodes vs. paper's 123,527 — discrepanc
 - Relative gain: +4.3% over HAN
 - Note: HAN, HGT, and RGCN are all in the GNN family. HAN was the best GNN baseline for standard-split indications. A plain RGCN or no-message-passing model would score lower; our `gnn_no_kg` is not a direct comparator to HAN.
 
-#### Zero-shot split — VERIFIED relative gains from BOTH versions; absolute values only in supplementary file
-- Random zero-shot split (Fig 2d): **+19.0% AUPRC for indications, +23.9% for contraindications** over next-best method. Confirmed in both PMC11326339 (preprint) and PMC11645266 (peer-reviewed) — same figures in both.
-- Nine disease-area splits: indication gains 0.5%–59.3% (mean 25.72%); contraindication gains 11.8%–35.6% (mean 18.67%). Confirmed in both versions.
-- **Absolute zero-shot AUPRC: NOT IN THE MAIN TEXT OF EITHER VERSION.** Both versions state explicitly that raw per-model scores are in Supplementary Tables 1 and 2. The body reports relative gains only. This is a settled fact — not a gap awaiting retrieval from the main article.
-- To get absolute values: download the SI file (MOESM1 ESM) from PMC11645266 or Springer static path. If pasted here, the correct rows to extract are labeled with the random zero-shot split and individual disease-area folds; report with 95% CI across five splits.
+#### Zero-shot split — VERIFIED: absolute values NOW RETRIEVED from Suppl. Table S1/S2 (MOESM1 ESM)
+
+**Supplementary Table S1 — Indication AUPRC (mean ± std across 5 seeds unless noted):**
+
+| Split | RGCN | HAN | HGT | BioBERT | TxGNN |
+|-------|------|-----|-----|---------|-------|
+| Random (standard) | 0.84±0.02 | 0.87±0.18 | 0.72±0.20 | 0.81±0.02 | **0.91±0.02** |
+| Zero-shot (random) | 0.50±0.04 | 0.62±0.03 | 0.56±0.08 | 0.76±0.03 | **0.90±0.02** |
+| Cell Proliferation | 0.47±0.00 | 0.65±0.04 | 0.61±0.10 | 0.83±0.0 | **0.92±0.00** |
+| Mental Health | 0.55±0.01 | 0.61±0.03 | 0.56±0.04 | 0.64±0.0 | **0.89±0.00** |
+| Cardiovascular | 0.41±0.00 | 0.63±0.05 | 0.60±0.05 | **0.66±0.0** | 0.64±0.00 |
+| Anemia | 0.42±0.00 | 0.67±0.01 | 0.53±0.05 | 0.64±0.0 | **0.96±0.00** |
+| Adrenal Gland | 0.38±0.00 | 0.59±0.04 | 0.54±0.10 | 0.64±0.0 | **0.99±0.00** |
+| Autoimmune | 0.51±0.00 | 0.53±0.03 | 0.49±0.05 | 0.66±0.0 | **0.87±0.00** |
+| Metabolic Disorder | 0.67±0.01 | 0.56±0.08 | 0.54±0.05 | 0.68±0.0 | **0.76±0.00** |
+| Diabetes | 0.40±0.00 | 0.67±0.11 | 0.62±0.17 | 0.69±0.0 | **0.87±0.00** |
+| Neurodegenerative | **0.84±0.00** | 0.71±0.10 | 0.60±0.06 | 0.57±0.0 | 0.95±0.00 |
+
+**Supplementary Table S2 — Contraindication AUPRC:**
+
+| Split | RGCN | HAN | HGT | BioBERT | TxGNN |
+|-------|------|-----|-----|---------|-------|
+| Random (standard) | 0.77±0.02 | **0.84±0.00** | 0.63±0.19 | 0.58±0.02 | 0.82±0.01 |
+| Zero-shot (random) | 0.64±0.03 | 0.50±0.03 | 0.54±0.06 | 0.57±0.03 | **0.80±0.01** |
+| Cell Proliferation | 0.54±0.00 | 0.51±0.04 | 0.47±0.03 | **0.78±0.0** | 0.87±0.00 |
+| Mental Health | 0.67±0.00 | 0.44±0.02 | 0.56±0.04 | 0.54±0.0 | **0.79±0.00** |
+| Cardiovascular | 0.63±0.00 | 0.47±0.02 | 0.51±0.02 | 0.56±0.0 | **0.72±0.00** |
+| Anemia | 0.65±0.00 | 0.54±0.04 | 0.51±0.04 | 0.53±0.0 | **0.74±0.00** |
+| Adrenal Gland | 0.75±0.00 | 0.46±0.02 | 0.55±0.08 | 0.47±0.0 | **0.88±0.00** |
+| Autoimmune | 0.68±0.00 | 0.40±0.01 | 0.61±0.08 | 0.40±0.0 | **0.86±0.00** |
+| Metabolic Disorder | 0.58±0.00 | 0.56±0.00 | 0.51±0.03 | 0.53±0.0 | **0.78±0.00** |
+| Diabetes | 0.57±0.00 | 0.56±0.03 | 0.52±0.05 | 0.51±0.0 | **0.69±0.00** |
+| Neurodegenerative | 0.71±0.00 | 0.42±0.01 | 0.55±0.04 | 0.60±0.0 | **0.78±0.00** |
+
+**Key observations from the tables:**
+- Zero-shot indication: TxGNN **0.90±0.02** vs BioBERT 0.76±0.03 → (0.90-0.76)/0.76 = 18.4% ≈ **+19.0%** ✓ (Fig 2d gain reconciled)
+- Zero-shot contraindication: TxGNN **0.80±0.01** vs RGCN 0.64±0.03 → (0.80-0.64)/0.64 = 25.0% (paper says 23.9%; consistent with rounding at 2 decimal places)
+- Standard contraindication: **HAN (0.84) beats TxGNN (0.82)**. TxGNN's gain claim (main text) refers to indications only. Standard contraindication is not TxGNN's advantage.
+- Cardiovascular indication: TxGNN 0.64 < BioBERT 0.66 — TxGNN is not best on every disease area.
+- The 49.2% / 35.1% headline cannot be derived from any row or combination in these tables. Confirmed unreconcilable.
+
+Nine disease-area splits: indication gains 0.5%–59.3% (mean 25.72%); contraindication gains 11.8%–35.6% (mean 18.67%). Confirmed in both versions.
 
 #### 49.2% / 35.1% discrepancy — CONFIRMED SETTLED (both versions read)
 - The peer-reviewed abstract (PMC11645266) states +49.2% (indications), +35.1% (contraindications) for "stringent zero-shot evaluation."
@@ -248,9 +290,8 @@ with pure structure methods at much lower cost; but again on general KGs, not bi
 
 ## What is NOT Known (honest gaps, updated 2026-06-24)
 
-1. **Absolute AUPRC for TxGNN and baselines on zero-shot split.**
-   Both versions (PMC11326339 preprint and PMC11645266 peer-reviewed) give only relative gains in the main text. Absolute values exist only in Supplementary Tables 1–2 (MOESM1 ESM), which requires directly downloading the SI file — not readable via web fetch (CAPTCHA-blocked). The relative gains (+19.0% indication, +23.9% contraindication, random zero-shot split) are the most that can be cited from the article body. This is a settled sourcing limit, not a gap to fill from the main text.
-   → Action if needed: download 41591_2024_3233_MOESM1_ESM.pdf from PMC11645266 "Supplementary information" section. Extract rows for random zero-shot split with 95% CI across five splits; label each row with its exact split before adding to paper_reported column.
+1. **Absolute AUPRC for TxGNN and baselines on zero-shot split. — RESOLVED.**
+   Supplementary Tables S1 and S2 (MOESM1 ESM) retrieved and read directly. Full tables are now in the "Zero-shot split" section above. The paper_reported column in 03_results.md is filled: TxGNN zero-shot indication = 0.90±0.02, contraindication = 0.80±0.01. No remaining gap.
 
 2. **Node count discrepancy: paper says 123,527 nodes; our kg.csv has 129,375.**
    Likely version difference or isolated nodes excluded from paper's filtered graph. No impact on results. Note in data card only.
