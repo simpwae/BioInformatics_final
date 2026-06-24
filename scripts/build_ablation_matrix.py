@@ -55,8 +55,20 @@ def aggregate_seeds(variant: str, split: str) -> dict:
         return row
 
     for task in TASKS:
-        auprcs = [r[task]["auprc"] for r in available if r[task].get("auprc") is not None]
-        aurocs = [r[task]["auroc"] for r in available if r[task].get("auroc") is not None]
+        # Prefer flat random-negative AUPRC for fair cross-model comparison
+        flat_key = f"{task}_flat"
+        def _get_auprc(r):
+            if flat_key in r and r[flat_key].get("auprc") is not None:
+                return r[flat_key]["auprc"]
+            return r.get(task, {}).get("auprc")
+        def _get_auroc(r):
+            if flat_key in r and r[flat_key].get("auroc") is not None:
+                return r[flat_key]["auroc"]
+            return r.get(task, {}).get("auroc")
+        auprcs = [_get_auprc(r) for r in available]
+        auprcs = [v for v in auprcs if v is not None]
+        aurocs = [_get_auroc(r) for r in available]
+        aurocs = [v for v in aurocs if v is not None]
         row[f"{task}_auprc_mean"] = round(float(np.mean(auprcs)), 5) if auprcs else None
         row[f"{task}_auprc_std"] = round(float(np.std(auprcs)), 5) if len(auprcs) > 1 else None
         row[f"{task}_auroc_mean"] = round(float(np.mean(aurocs)), 5) if aurocs else None
@@ -90,18 +102,25 @@ def compute_q6_decision(matrix_rows: list) -> dict:
 
     delta = round(float(full_auprc) - float(no_attn_auprc), 5)
 
+    # Decision rule from CLAUDE.md (set before running):
+    # delta < 0.02  -> attention not load-bearing (optional or harmful)
+    # delta >= 0.02 -> attention is beneficial; report that
+    # If delta is strongly negative (< -0.02), attention is actively detrimental.
+    if delta >= ATTENTION_DELTA_THRESHOLD:
+        verdict = "BENEFICIAL — attention improves zero-shot AUPRC"
+    elif delta >= -ATTENTION_DELTA_THRESHOLD:
+        verdict = "OPTIONAL — removing attention has minimal effect"
+    else:
+        verdict = "DETRIMENTAL — removing attention IMPROVES zero-shot AUPRC"
+
     return {
         "status": "DECIDED",
         "txgnn_attn_on_zeroshot_ind_auprc": full_auprc,
         "txgnn_attn_off_zeroshot_ind_auprc": no_attn_auprc,
         "delta_attn_on_minus_off": delta,
         "threshold": ATTENTION_DELTA_THRESHOLD,
-        "attention_optional": delta < ATTENTION_DELTA_THRESHOLD,
-        "conclusion": (
-            f"Attention is {'OPTIONAL' if delta < ATTENTION_DELTA_THRESHOLD else 'LOAD-BEARING'}. "
-            f"Delta = {delta:.5f} ({'<' if delta < ATTENTION_DELTA_THRESHOLD else '>='} "
-            f"{ATTENTION_DELTA_THRESHOLD} threshold)."
-        ),
+        "attention_optional": abs(delta) < ATTENTION_DELTA_THRESHOLD,
+        "conclusion": f"Attention is {verdict}. Delta = {delta:.5f}.",
     }
 
 

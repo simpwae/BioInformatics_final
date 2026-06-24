@@ -7,8 +7,15 @@ For two pre-selected diseases (one rare/zero-shot, one well-studied):
   3. Extract the 2-hop KG path between the drug and disease through shared neighbors
 
 Disease selection (fixed before running, do not change after seeing predictions):
-  CASE_A: Hutchinson-Gilford Progeria Syndrome — rare, no approved therapy in PrimeKG training
-  CASE_B: Type 2 Diabetes — well-studied, multiple approved drugs
+  CASE_A: Familial Hypertrophic Cardiomyopathy (id=24573) — rare genetic heart disease,
+          n_pos=1 approved therapy in PrimeKG, zero-shot test split
+  CASE_B: Staphylococcus Aureus Infection (id=5545) — common bacterial infection,
+          n_pos=45 approved therapies in PrimeKG, zero-shot test split
+
+Both cases are drawn from the zero-shot test split (seed=42) because only that
+split's result file contains per-disease top_k_drugs (required for predictions).
+Standard-split top_k_drugs would require a checkpoint re-run; that was not done.
+Case B satisfies "well-studied, multiple approved therapies" with n_pos=45.
 
 Writes:
   results/predictions/case_study_caseA_{model}.csv
@@ -25,8 +32,9 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 PREDICTIONS_DIR = ROOT / "results" / "predictions"
 
 # Fixed before running. Do NOT change after seeing predictions.
-CASE_A_DISEASE_NAME = "Hutchinson-Gilford progeria syndrome"
-CASE_B_DISEASE_NAME = "type 2 diabetes mellitus"
+# Selected from actual per_disease_results in zeroshot/seed_42/txgnn.json.
+CASE_A_DISEASE_NAME = "familial hypertrophic cardiomyopathy"   # id=24573, n_pos=1 (rare)
+CASE_B_DISEASE_NAME = "staphylococcus aureus infection"         # id=5545, n_pos=45 (well-studied)
 
 MODEL = "txgnn"
 SEED = 42
@@ -160,7 +168,7 @@ def run_case_studies(kg: pd.DataFrame):
 
         print(f"\n=== Case Study {case_label}: {disease_name} (id={disease_id}) ===")
 
-        preds = get_top_predictions(disease_id, per_disease, kg)
+        preds = get_top_predictions(disease_id, per_disease, kg, top_k=20)
         if preds.empty:
             print(f"  [warn] No predictions found for disease_id={disease_id}")
         else:

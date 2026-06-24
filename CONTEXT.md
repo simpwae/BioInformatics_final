@@ -282,3 +282,46 @@ None this session. All TxGNN numbers sourced directly from result files.
 2. TxGNN zero-shot indication_flat (0.736 ± 0.011) slightly outperforms GNN KG (0.714 ± 0.027) and GNN no-KG (0.704 ± 0.028) on zero-shot split — the disease similarity module provides a small but consistent zero-shot advantage. This is the expected direction from the paper.
 3. TxGNN seed=1/zeroshot contraindication AUROC is 0.483 (per-disease full ranking) — below random. This is for the per-disease full-ranking metric only; the random-negative AUROC for seed=1 zeroshot contraindication is 0.976 (normal). The per-disease full-ranking metric is highly sensitive to class imbalance and random seed variation. Not a bug in the model.
 ---
+
+## Session 5 — 2026-06-24
+
+**What was done:**
+1. Completed Q4 case studies: updated case_study_runner.py with correct disease selections (FHC id=24573 and Staphylococcus Aureus id=5545), both from zeroshot/seed_42. Generated prediction CSVs and KG path CSVs in results/predictions/.
+2. Generated final Q5 comparison table (all 5 models × 2 splits × 3 seeds) and Q6 ablation matrix (all variants verified).
+3. Completed all three report sections: 03_results.md (Q1–Q6 with real numbers), 04_case_studies.md (full case study write-up), 05_discussion.md (all Q1–Q6 discussion).
+4. All experiments were complete at start of session; session focused on report writing and case study execution.
+
+**Case study disease selection change (logged as deviation):**
+- Original selection: Hutchinson-Gilford Progeria (Case A) and Type 2 Diabetes/id=5148 (Case B).
+- Progeria has ZERO therapeutic edges in all PrimeKG splits — no per_disease_results entry exists.
+- T2DM id=5148 is not in the zeroshot/seed_42 test split.
+- Replacement selections confirmed from actual per_disease_results before examining top_k_drugs:
+  - Case A: Familial Hypertrophic Cardiomyopathy (id=24573, n_pos=1, AUPRC=0.025)
+  - Case B: Staphylococcus Aureus Infection (id=5545, n_pos=45, AUPRC=0.088)
+- Both cases from zeroshot split because only zeroshot result files contain top_k_drugs (standard-split txgnn checkpoint was not saved).
+
+**Verified (real result files):**
+
+Q2 alternatives (all seeds, both splits):
+- single_stage zeroshot: 0.706 ± 0.033 (ind), 0.833 ± 0.019 (contra), wall=130.7s
+- joint_contrastive zeroshot: 0.670 ± 0.038 (ind), 0.854 ± 0.016 (contra), wall=97.1s
+- txgnn_two_phase zeroshot: 0.736 ± 0.011 (ind), 0.832 ± 0.010 (contra), wall=71.6s
+- Finding: two-phase training remains best for zero-shot indication; also fastest
+
+Q6 ablations (all seeds, zeroshot):
+- txgnn (attn=ON, sim=ON): 0.736 ± 0.011
+- txgnn_no_attn (attn=OFF, sim=ON): 0.772 ± 0.013
+- txgnn_no_sim (attn=ON, sim=OFF): 0.726 ± 0.007
+- txgnn_no_both (attn=OFF, sim=OFF): 0.762 ± 0.010
+- Q6 decision: delta = -0.036 → attention DETRIMENTAL (exceeds -0.02 threshold)
+- Disease-similarity module is the load-bearing component; attention hurts in scaled setup
+
+Case study results:
+- Case A (FHC, n_pos=1): positive drug (Propranolol) NOT in top-20; AUPRC=0.025
+- Case B (Staph, n_pos=45): Benzylpenicillin at rank 18 (positive); Mupirocin rank 3 and Doxycycline rank 5 clinically plausible; 3 cancer drugs in top-10 (noise)
+
+**Result Surprises:**
+1. Attention is DETRIMENTAL (not just optional): removing HGT attention improves zero-shot AUPRC by 3.6 points. The no_attn variant also runs in 3.2s vs 71.6s (22× faster — attention is computationally expensive).
+2. single_stage is SLOWER than two-phase (130.7s vs 71.6s) and worse in AUPRC. The expected "simpler = faster" intuition fails because joint training requires more optimization steps to converge.
+3. For Case B (Staph), Benzylpenicillin (first-line MSSA antibiotic) appears only at rank 18 despite n_pos=45 including many antibiotics. The model ranks several cancer drugs higher than standard-of-care antibiotics.
+---

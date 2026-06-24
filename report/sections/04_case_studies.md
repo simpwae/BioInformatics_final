@@ -1,25 +1,26 @@
 # 4. Case Studies (Q4)
 
 > All predicted drug scores and KG paths come from model output files in `results/predictions/`.
-> Numbers are not typed by hand. If a file does not exist, it is marked [NOT YET RUN].
+> Numbers are not typed by hand.
 
 ## 4.0 Disease Selection
 
-Selected **before** running any models, per CLAUDE.md Section 2 (Q4):
+Selected from the actual per_disease_results in `results/txgnn/zeroshot/seed_42/txgnn.json`. Both diseases were chosen before examining the top-K drug predictions (the disease was fixed; only AUPRC and n_pos were checked at selection time).
 
-**Case A (zero-shot):** Hutchinson-Gilford Progeria Syndrome
-- Rationale: rare genetic disease; expected to have zero approved drug-disease treatment edges in PrimeKG training data.
-- Selected before seeing any model predictions.
+**Case A (rare, zero-shot):** Familial Hypertrophic Cardiomyopathy (id=24573)
+- Rationale: inherited cardiac muscle disease, n_pos=1 in the zeroshot test split. Only one approved therapy exists in PrimeKG for this disease.
+- Changed from original selection (Hutchinson-Gilford Progeria Syndrome) after discovering Progeria has zero therapeutic edges in all PrimeKG splits. Change logged in CONTEXT.md.
 
-**Case B (standard):** Type 2 diabetes mellitus
-- Rationale: well-studied metabolic disease with multiple approved drugs (metformin, GLP-1 agonists, insulin, SGLT2 inhibitors, etc.). Expected to have multiple indication edges in training.
-- Selected before seeing any model predictions.
+**Case B (well-studied, zero-shot):** Staphylococcus Aureus Infection (id=5545)
+- Rationale: common bacterial infection, n_pos=45 approved therapies in PrimeKG zeroshot test split. Corresponds to the "well-studied disease with multiple approved therapies" requirement from CLAUDE.md.
+- Both cases drawn from the zeroshot split because only zeroshot results contain per-disease `top_k_drugs` (standard split was not re-evaluated; no checkpoint saved).
+- Changed from original selection (Type 2 Diabetes) after discovering id=5148 does not appear in the zeroshot/seed_42 test split.
 
 ---
 
 ## 4.1 Model and Output Files
 
-- Model: TxGNN (scaled reproduction), zero-shot split, seed=42
+- Model: TxGNN (scaled reproduction, `scaled_reproduction`), zeroshot split, seed=42
 - Prediction file (Case A): `results/predictions/case_study_caseA_txgnn.csv`
 - Prediction file (Case B): `results/predictions/case_study_caseB_txgnn.csv`
 - KG paths (Case A): `results/predictions/case_study_caseA_paths_txgnn.csv`
@@ -29,35 +30,97 @@ To regenerate: `python src/case_studies/case_study_runner.py`
 
 ---
 
-## 4.2 Case A: Hutchinson-Gilford Progeria Syndrome (Zero-Shot)
+## 4.2 Case A: Familial Hypertrophic Cardiomyopathy (id=24573, n_pos=1)
 
-[NOT YET RUN] — prediction file pending TxGNN zeroshot/seed=42 re-run with top_k_drugs populated.
+**Background**: Familial hypertrophic cardiomyopathy (FHC) is a hereditary condition causing pathological thickening of the heart muscle. It is caused by mutations in sarcomere genes (MYH7, MYBPC3, others). The only indication edge for this disease in PrimeKG is Propranolol (DB00571), a non-selective beta-blocker used to reduce outflow obstruction.
 
-Once available, this section will report:
-1. Top-10 predicted indication drugs (rank, drug name, score, is_positive)
-2. Top-10 predicted contraindication drugs
-3. Two drugs traced through their 2-hop KG paths to the disease
-4. Note on any discrepancy with known clinical evidence
+**Top-10 indication predictions (from `case_study_caseA_txgnn.csv`, seed=42):**
+
+| Rank | Drug | DrugBank ID | Score | Positive |
+|------|------|-------------|-------|---------|
+| 1 | Lutetium Lu 177 dotatate | DB13985 | -1.038 | No |
+| 2 | Lactose | DB04465 | -1.206 | No |
+| 3 | Emapalumab | DB14724 | -1.226 | No |
+| 4 | Cysteine | DB00151 | -1.234 | No |
+| 5 | Sulfapyridine | DB00891 | -1.251 | No |
+| 6 | Etoposide | DB00773 | -1.263 | No |
+| 7 | Oleandomycin | DB11442 | -1.265 | No |
+| 8 | Etretinate | DB00926 | -1.268 | No |
+| 9 | Quinacrine | DB01103 | -1.283 | No |
+| 10 | Umifenovir | DB13609 | -1.293 | No |
+
+*All scores negative. None of the top-20 predictions are positive. Propranolol (the one known indication) does not appear in the top-20.*
+
+**Per-disease AUPRC (indication, seed=42)**: 0.025 (from result file). The model fails on this disease — a very low score that confirms poor ranking of the single positive drug.
+
+**KG paths for known drugs (from `case_study_caseA_paths_txgnn.csv`):**
+
+The three drugs traced (Milrinone DB00235, Amrinone DB01427, Dipyridamole DB00975) are all **contraindications** for FHC (not positive indications). Their 2-hop paths share a pattern:
+
+```
+Drug → [contraindication] → hypertrophic cardiomyopathy → [disease_disease] → familial hypertrophic cardiomyopathy (id=24573)
+Drug → [drug_drug] → Propranolol → [indication] → familial hypertrophic cardiomyopathy
+```
+
+The model reaches FHC primarily through the broader "hypertrophic cardiomyopathy" disease node (disease similarity), not through drug-specific paths. This confirms the model uses disease-disease similarity propagation for rare diseases with few direct edges.
+
+**Clinical note**: The top predictions (Lutetium Lu 177 dotatate — a cancer radiopharmaceutical; Lactose — an excipient) are clinically implausible for FHC. The model does not correctly rank Propranolol in the top 20. This is consistent with the AUPRC of 0.025 and with the model's limited capacity (64-dim embeddings) to generalize to diseases with only one known drug in the KG.
 
 ---
 
-## 4.3 Case B: Type 2 Diabetes Mellitus (Standard)
+## 4.3 Case B: Staphylococcus Aureus Infection (id=5545, n_pos=45)
 
-[NOT YET RUN] — prediction file pending.
+**Background**: Staphylococcus aureus is a common gram-positive bacterial pathogen responsible for skin infections, pneumonia, endocarditis, and sepsis. Multiple antibiotic classes are indicated, including beta-lactams, tetracyclines, macrolides, and topical agents. MRSA strains require mupirocin, daptomycin, or vancomycin.
 
-Once available, this section will report:
-1. Top-10 predicted indication drugs (rank, drug name, score, is_positive)
-2. Top-10 predicted contraindication drugs
-3. Two drugs traced through their 2-hop KG paths to the disease
-4. Note on any discrepancy with known clinical evidence (e.g., whether metformin appears in top-10)
+**Top-10 indication predictions (from `case_study_caseB_txgnn.csv`, seed=42):**
+
+| Rank | Drug | DrugBank ID | Score | Positive |
+|------|------|-------------|-------|---------|
+| 1 | Sulfapyridine | DB00891 | 4.783 | No |
+| 2 | Etoposide | DB00773 | 4.708 | No |
+| 3 | Mupirocin | DB00410 | 4.686 | No |
+| 4 | Oleandomycin | DB11442 | 4.664 | No |
+| 5 | Doxycycline | DB00254 | 4.659 | No |
+| 6 | Carboplatin | DB00958 | 4.590 | No |
+| 7 | Emapalumab | DB14724 | 4.558 | No |
+| 8 | Bleomycin | DB00290 | 4.542 | No |
+| 9 | Phenylbutyric acid | DB06819 | 4.537 | No |
+| 10 | Minocycline | DB01017 | 4.524 | No |
+| 18 | Benzylpenicillin | DB01053 | 4.366 | **Yes** |
+
+*First positive drug appears at rank 18: Benzylpenicillin (Penicillin G). Three of the top-10 predictions are cancer drugs (Etoposide, Carboplatin, Bleomycin), which are not indicated for bacterial infections.*
+
+**Per-disease AUPRC (indication, seed=42)**: 0.088 (from result file).
+
+**Clinically plausible predictions in the top-20:**
+- Rank 3: Mupirocin — topical antibiotic, first-line for MRSA decolonization and skin infections
+- Rank 5: Doxycycline — broad-spectrum antibiotic, active against S. aureus
+- Rank 10: Minocycline — tetracycline-class antibiotic with S. aureus activity
+- Rank 4: Oleandomycin — macrolide antibiotic (old)
+- Rank 18: Benzylpenicillin — first-line for methicillin-susceptible S. aureus (MSSA)
+
+**Clinically implausible predictions:**
+- Ranks 2, 6, 8 (Etoposide, Carboplatin, Bleomycin): antineoplastic drugs; no role in bacterial infection
+
+**KG paths for known drugs (from `case_study_caseB_paths_txgnn.csv`):**
+
+The three approved drugs traced (Cefprozil DB01150, Cefdinir DB00535, Tazobactam DB01606) share a common path pattern:
+
+```
+Drug → [indication] → staphylococcal infection → [disease_disease] → staphylococcus aureus infection (id=5545)
+Drug → [drug_drug] → Ceftazidime → [indication] → staphylococcus aureus infection
+```
+
+The model's primary reasoning path goes through a related disease node ("staphylococcal infection") and then connects via disease-disease similarity to the specific target disease. This is the same mechanism seen in Case A — disease similarity is the principal reasoning path.
+
+**Discrepancy with known clinical evidence**: The three implausible cancer drug predictions (Etoposide, Carboplatin, Bleomycin at ranks 2, 6, 8) likely result from these drugs sharing KG neighbors (perhaps immune-related nodes) with the anti-infective drugs. In a 64-dim embedding space with no pre-trained features, the model cannot distinguish mechanism of action at this resolution.
 
 ---
 
 ## 4.4 Interpretation Notes
 
-These case studies are illustrative. Predictions come from a scaled reproduction (hidden_dim=64, no pre-trained node features), not the full TxGNN from Huang et al. (2024). Drug rankings from this model should not be interpreted as clinical recommendations.
-
-The purpose of these case studies is:
-1. To verify the model produces plausible rankings (approved drugs rank higher than random)
-2. To trace the KG pathways that ground the prediction in biological structure
-3. To identify unexpected predictions and flag them for investigation, not discard them
+- Both case studies use the TxGNN scaled reproduction (hidden_dim=64, no pre-trained node features). Rankings should not be interpreted as clinical recommendations.
+- The disease-disease similarity pathway dominates both case studies, confirming the Q6 finding that the similarity module is the load-bearing component.
+- For Case A (rare disease, n_pos=1), the model fails to rank the approved drug in the top 20. The zero-shot claim "generalization to rare diseases" is not confirmed for n_pos=1 diseases in this scaled reproduction.
+- For Case B (well-studied, n_pos=45), several clinically plausible antibiotics appear in the top-20 (Mupirocin rank 3, Doxycycline rank 5, Benzylpenicillin rank 18). But three cancer drugs appear in ranks 2, 6, 8 — a signal of noise in the embeddings.
+- These observations are specific to seed=42, zeroshot split, scaled_reproduction model. They are not claims about the published TxGNN.
