@@ -1,0 +1,20 @@
+model:
+  name: gnn_baseline
+  architecture: HGT
+  hidden_dim: 128
+  num_heads: 4
+  num_layers: 2
+  dropout: 0.1
+
+training:
+  pretrain_epochs: 30
+  finetune_epochs: 100
+  lr: 0.001
+  weight_decay: 0.00001
+  neg_ratio: 5
+  early_stopping_patience: 10
+  mixed_precision: true
+
+# Results written to: results/gnn/{split}/seed_{n}/gnn_baseline.json
+# All results labeled as scaled_reproduction.
+# Paper reference column: not applicable (this IS the baseline).

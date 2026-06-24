@@ -1,0 +1,26 @@
+model:
+  name: txgnn_no_attn
+  architecture: MeanAgg_with_disease_similarity
+  hidden_dim: 128
+  num_heads: 4
+  num_layers: 2
+  dropout: 0.1
+  use_attention: false     # Q6 condition B: attention OFF
+  use_similarity: true     # similarity module ON (controls zero-shot)
+  n_neighbors: 5
+  reproduction_type: original_ablation
+
+# Q6 decision rule (CLAUDE.md):
+#   delta = auprc(txgnn) - auprc(txgnn_no_attn) on zero-shot indication
+#   delta < 0.02  -> attention OPTIONAL
+#   delta >= 0.02 -> attention LOAD-BEARING; report that
+
+training:
+  pretrain_epochs: 30
+  finetune_epochs: 100
+  lr: 0.001
+  weight_decay: 0.00001
+  neg_ratio: 5
+  sim_loss_weight: 0.3
+  early_stopping_patience: 10
+  mixed_precision: true

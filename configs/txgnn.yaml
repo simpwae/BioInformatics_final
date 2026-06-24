@@ -1,0 +1,25 @@
+model:
+  name: txgnn
+  architecture: HGT_with_disease_similarity
+  hidden_dim: 128          # scaled from 512 (paper) — VRAM constraint
+  num_heads: 4             # scaled from 8 (paper) — VRAM constraint
+  num_layers: 2            # scaled from 3 (paper) — VRAM constraint
+  dropout: 0.1
+  use_attention: true      # HGT attention — Q6 ablation flag
+  use_similarity: true     # disease-similarity module — Q6 ablation flag
+  n_neighbors: 5           # K nearest seen diseases for zero-shot transfer
+  reproduction_type: scaled_reproduction
+  paper_hidden_dim: 512
+  paper_num_layers: 3
+  paper_num_heads: 8
+  deviation_reason: "RTX 4060 8 GB VRAM constraint"
+
+training:
+  pretrain_epochs: 30
+  finetune_epochs: 100
+  lr: 0.001
+  weight_decay: 0.00001
+  neg_ratio: 5
+  sim_loss_weight: 0.3     # weight of disease-similarity loss in Phase 2
+  early_stopping_patience: 10
+  mixed_precision: true

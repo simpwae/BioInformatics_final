@@ -1,0 +1,23 @@
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  splits_dir: "data/splits"
+
+training:
+  seeds: [42, 0, 1]
+  epochs: 100
+  early_stopping_patience: 10
+
+evaluation:
+  metrics: ["auprc", "auroc"]
+  tasks: ["indication", "contraindication"]
+
+results:
+  metrics_dir: "results/metrics"
+  predictions_dir: "results/predictions"
+  figures_dir: "results/figures"
+
+# Leakage check must pass before any zero-shot results are accepted.
+leakage_check:
+  output: "results/metrics/leakage_check.json"
+  required: true

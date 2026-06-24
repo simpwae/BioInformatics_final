@@ -1,0 +1,8 @@
+gpu:
+  device_id: 0
+  name: "NVIDIA GeForce RTX 4060"
+  vram_gb: 8
+  # Keep batch sizes small enough to fit in 8 GB.
+  # TxGNN is a scaled reproduction — label results accordingly.
+  mixed_precision: true   # use torch.cuda.amp to reduce VRAM pressure
+  grad_checkpointing: false  # enable if OOM, at the cost of speed

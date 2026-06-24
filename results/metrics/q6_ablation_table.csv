@@ -1,0 +1,5 @@
+variant,split,auprc_ind_mean
+txgnn_attn_on,standard,[NOT YET RUN]
+txgnn_attn_on,zeroshot,[NOT YET RUN]
+txgnn_attn_off,standard,[NOT YET RUN]
+txgnn_attn_off,zeroshot,[NOT YET RUN]

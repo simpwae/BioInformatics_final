@@ -1,0 +1,19 @@
+model,split,n_seeds_run,reproduction_type,auprc_ind,auprc_ind_std,auroc_ind,auroc_ind_std,auprc_contra,auprc_contra_std,auroc_contra,auroc_contra_std,wall_s
+gnn_no_kg,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+gnn_no_kg,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+gnn_kg,standard,3,scaled_reproduction,0.8245,0.022,0.9716,0.0055,0.895,0.0262,0.9836,0.0034,145.5
+gnn_kg,zeroshot,2,scaled_reproduction,0.7055,0.0282,0.9523,0.0052,0.8303,0.0196,0.9742,0.0015,61.0
+txgnn_two_phase,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+txgnn_two_phase,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+single_stage,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+single_stage,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+joint_contrastive,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+joint_contrastive,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+txgnn_attn_on,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+txgnn_attn_on,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+txgnn_attn_off,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+txgnn_attn_off,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+transformer_kg,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+transformer_kg,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+transformer_nokg,standard,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
+transformer_nokg,zeroshot,0,?,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN],,[NOT YET RUN]
