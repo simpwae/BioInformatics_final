@@ -65,6 +65,15 @@ export default function Methods() {
         </p>
 
         <h3>TxGNN (scaled reproduction)</h3>
+        <div className="finding-box">
+          <p>
+            <strong>Architecture clarification:</strong> TxGNN uses the Heterogeneous Graph
+            Transformer (HGT) encoder. The word &ldquo;Transformer&rdquo; in HGT refers to its
+            multi-head attention aggregation mechanism — it is a <strong>graph neural network
+            (GNN)</strong>, not a large language model or text-based Transformer. No language
+            models are trained in this study.
+          </p>
+        </div>
         <p>
           Same HGT encoder as GNN baseline. Added:{' '}
           <code>DiseaseSimilarityModule</code> (cosine similarity projection, k=5 nearest support

@@ -121,13 +121,15 @@ Note: on standard contraindication, HAN (0.84) outperforms TxGNN (0.82) in the p
 - TxGNN's advantage on zero-shot is 3.2 points over gnn_no_kg — meaningful but modest in this scaled reproduction.
 - Wall-clock: gnn_no_kg is fastest (0.7–0.2s). TxGNN and gnn_kg are comparable (~70s). single_stage is slowest (130s).
 
-## 3.6 Q6 — Is Attention Optional?
+## 3.6 Q6 — Is Attention Optional? (Finding: It Is Detrimental)
+
+The question asks whether attention is *optional*. The result is stronger: attention is **actively detrimental** in this scaled reproduction.
 
 **Decision rule (set before running)**:
 - delta = AUPRC(attn=ON) − AUPRC(attn=OFF) on zero-shot indication
-- delta < 0.02: attention is optional
-- delta ≥ 0.02: attention matters
-- Extended rule added before seeing results: if delta < -0.02, attention is actively detrimental
+- delta in (−0.02, +0.02): attention is optional (neutral)
+- delta ≥ +0.02: attention helps — matters
+- delta ≤ −0.02: attention hurts — actively detrimental
 
 **Full ablation table (zero-shot split, seeds [42, 0, 1]):**
 

@@ -3,7 +3,27 @@
 > All predicted drug scores and KG paths come from model output files in `results/predictions/`.
 > Numbers are not typed by hand.
 
-## 4.0 Disease Selection
+## 4.0 Relationship to Paper's Case Studies
+
+Huang et al. (2024) include their own case studies in the Nature Medicine paper. Their case studies use specific diseases analyzed with the **full published TxGNN** (hidden_dim=512, 3 layers, pre-trained node features). This reproduction **does not replicate those specific case studies** because:
+
+1. The full-scale model could not be run on 8 GB VRAM — all results use a scaled_reproduction (hidden_dim=64).
+2. The paper's specific disease selections may not appear in the zero-shot test split of our downloaded PrimeKG version.
+3. The paper's pre-trained node features are not publicly accessible; our model uses learnable embeddings.
+
+This section runs its own case studies on the scaled_reproduction model, chosen from diseases that **actually appear in our zero-shot test split** with sufficient positive labels to evaluate. These are not claimed to match the paper's narrative — they are original case studies on the scaled model.
+
+**What the paper's case studies show vs. what ours show:**
+
+| Aspect | Paper (Huang et al. 2024) | This reproduction |
+|--------|--------------------------|-------------------|
+| Model | Full TxGNN, 512-dim, pre-trained features | Scaled TxGNN, 64-dim, learnable embeddings |
+| Disease selection | Paper's own choice | Constrained to zero-shot test split presence |
+| Case A type | Rare disease, paper's selection | Familial Hypertrophic Cardiomyopathy (n_pos=1) |
+| Case B type | Well-studied disease, paper's selection | Staphylococcus Aureus Infection (n_pos=45) |
+| Claim | Published model succeeds on rare diseases | Scaled model fails on n_pos=1; partial success on n_pos=45 |
+
+## 4.0b Disease Selection (This Reproduction)
 
 Selected from the actual per_disease_results in `results/txgnn/zeroshot/seed_42/txgnn.json`. Both diseases were chosen before examining the top-K drug predictions (the disease was fixed; only AUPRC and n_pos were checked at selection time).
 

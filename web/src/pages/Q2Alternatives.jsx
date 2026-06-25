@@ -77,8 +77,8 @@ export default function Q2Alternatives() {
             <YAxis domain={[0.6, 0.9]} tickFormatter={(v) => v.toFixed(2)} />
             <Tooltip formatter={(v) => v.toFixed(3)} />
             <Legend />
-            <Bar dataKey="AUPRC ind" fill="#333333" />
-            <Bar dataKey="AUPRC contra" fill="#888888" />
+            <Bar dataKey="AUPRC ind"    fill="var(--indication)" opacity={0.85} />
+            <Bar dataKey="AUPRC contra" fill="var(--contra)"     opacity={0.85} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -101,9 +101,7 @@ export default function Q2Alternatives() {
                 <td>
                   {r.displayName}
                   {r.model === 'txgnn_two_phase' && (
-                    <span style={{ marginLeft: '0.5rem', fontWeight: 400, fontSize: '0.8rem', color: '#1a5c2e' }}>
-                      (best)
-                    </span>
+                    <span className="positive-badge" style={{ marginLeft: '0.5rem' }}>best</span>
                   )}
                 </td>
                 <td>{fmt(r.auprc_ind, r.auprc_ind_std)}</td>
@@ -178,16 +176,18 @@ export default function Q2Alternatives() {
                   <td>{r.wall_s}</td>
                   <td
                     style={{
-                      color: betterInd ? '#1a5c2e' : '#7a1818',
+                      color: betterInd ? 'var(--indication)' : 'var(--contra)',
                       fontWeight: 600,
+                      fontFamily: 'var(--font-mono)',
                     }}
                   >
                     {r.model === 'txgnn_two_phase' ? '(baseline)' : betterInd ? 'Yes' : 'No'}
                   </td>
                   <td
                     style={{
-                      color: betterSpeed ? '#1a5c2e' : '#7a1818',
+                      color: betterSpeed ? 'var(--indication)' : 'var(--contra)',
                       fontWeight: 600,
+                      fontFamily: 'var(--font-mono)',
                     }}
                   >
                     {r.model === 'txgnn_two_phase' ? '(baseline)' : betterSpeed ? 'Yes' : 'No'}

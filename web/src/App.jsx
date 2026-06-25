@@ -1,7 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { DataProvider } from './context/DataContext.jsx'
-import Nav from './components/Nav.jsx'
+import Rail from './components/Rail.jsx'
 import Footer from './components/Footer.jsx'
 import Overview from './pages/Overview.jsx'
 import Methods from './pages/Methods.jsx'
@@ -20,8 +20,8 @@ export default function App() {
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
-        <Nav />
-        <main id="main-content">
+        <Rail />
+        <main id="main-content" className="site-main">
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/methods" element={<Methods />} />

@@ -20,20 +20,24 @@ function fmt(val, std) {
   return s
 }
 
+function MonoNum({ children }) {
+  return (
+    <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+      {children}
+    </span>
+  )
+}
+
 function Q1Chart({ rows }) {
   const splits = ['standard', 'zeroshot']
   const models = ['gnn_no_kg', 'gnn_kg']
-  const displayNames = {
-    gnn_no_kg: 'GNN no-KG',
-    gnn_kg: 'GNN KG',
-  }
 
   const chartData = splits.map((split) => {
     const obj = { split: split === 'zeroshot' ? 'Zero-Shot' : 'Standard' }
     models.forEach((m) => {
       const row = rows.find((r) => r.model === m && r.split === split)
       if (row) {
-        obj[`${m}_ind`] = row.auprc_ind
+        obj[`${m}_ind`]    = row.auprc_ind
         obj[`${m}_contra`] = row.auprc_contra
       }
     })
@@ -44,26 +48,98 @@ function Q1Chart({ rows }) {
     <div className="chart-container">
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="split" />
-          <YAxis domain={[0.6, 1]} tickFormatter={(v) => v.toFixed(2)} />
-          <Tooltip formatter={(v) => v.toFixed(3)} />
-          <Legend />
-          <Bar dataKey="gnn_no_kg_ind" name="GNN no-KG (indication)" fill="#333333" />
-          <Bar dataKey="gnn_kg_ind" name="GNN KG (indication)" fill="#888888" />
-          <Bar dataKey="gnn_no_kg_contra" name="GNN no-KG (contra)" fill="#666666" hachureGap={4} />
-          <Bar dataKey="gnn_kg_contra" name="GNN KG (contra)" fill="#aaaaaa" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+          <XAxis dataKey="split" tick={{ fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+          <YAxis
+            domain={[0.6, 1]}
+            tickFormatter={(v) => v.toFixed(2)}
+            tick={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}
+          />
+          <Tooltip
+            formatter={(v) => v.toFixed(3)}
+            contentStyle={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.8rem',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              background: 'var(--paper-raised)',
+            }}
+          />
+          <Legend wrapperStyle={{ fontFamily: 'var(--font-body)', fontSize: '0.8rem' }} />
+          <Bar dataKey="gnn_no_kg_ind"    name="GNN no-KG (indication)"  fill="var(--indication)" opacity={0.85} />
+          <Bar dataKey="gnn_kg_ind"       name="GNN KG (indication)"     fill="var(--accent)"     opacity={0.85} />
+          <Bar dataKey="gnn_no_kg_contra" name="GNN no-KG (contra)"      fill="var(--indication)" opacity={0.45} />
+          <Bar dataKey="gnn_kg_contra"    name="GNN KG (contra)"         fill="var(--accent)"     opacity={0.45} />
         </BarChart>
       </ResponsiveContainer>
     </div>
   )
 }
 
+function TableLegend() {
+  return (
+    <div className="table-legend">
+      <div className="table-legend-item">
+        <div className="legend-swatch indication" />
+        <span>Indication</span>
+      </div>
+      <div className="table-legend-item">
+        <div className="legend-swatch contra" />
+        <span>Contraindication</span>
+      </div>
+    </div>
+  )
+}
+
+function PaperCell({ pr, model, split }) {
+  if (pr?.auprc_ind) {
+    return (
+      <span>
+        <MonoNum>{pr.auprc_ind}</MonoNum>{' '}
+        <span className="badge badge-paper">paper</span>
+      </span>
+    )
+  }
+  if (split === 'zeroshot' && (model === 'txgnn_two_phase' || model === 'txgnn_attn_on')) {
+    return (
+      <span
+        className="paper-missing"
+        title="Absolute zero-shot values available in Huang et al. 2024 Supplementary Tables S1–S2 (MOESM1 ESM). Relative improvement: +19.0% indication vs next-best baseline."
+      >
+        — <span style={{ fontSize: '0.7rem' }}>[no data — see Suppl. S1]</span>
+      </span>
+    )
+  }
+  return <span style={{ color: 'var(--structure)', fontFamily: 'var(--font-mono)' }}>—</span>
+}
+
+function PaperContraCell({ pr, model, split }) {
+  if (pr?.auprc_contra) {
+    return (
+      <span>
+        <MonoNum>{pr.auprc_contra}</MonoNum>{' '}
+        <span className="badge badge-paper">paper</span>
+      </span>
+    )
+  }
+  if (split === 'zeroshot' && (model === 'txgnn_two_phase' || model === 'txgnn_attn_on')) {
+    return (
+      <span
+        className="paper-missing"
+        title="Absolute zero-shot values available in Huang et al. 2024 Supplementary Tables S1–S2 (MOESM1 ESM). Relative improvement: +23.9% contraindication vs next-best baseline."
+      >
+        — <span style={{ fontSize: '0.7rem' }}>[no data — see Suppl. S2]</span>
+      </span>
+    )
+  }
+  return <span style={{ color: 'var(--structure)', fontFamily: 'var(--font-mono)' }}>—</span>
+}
+
 export default function Results() {
   const { data, loading, error } = useData()
   const [splitFilter, setSplitFilter] = useState('all')
 
-  if (loading) return <div className="page status-loading">Loading...</div>
+  if (loading) return <div className="page status-loading">Loading&#8230;</div>
   if (error) return <div className="page"><div className="status-error">{error}</div></div>
 
   const table = data.comparisonTable || []
@@ -94,9 +170,11 @@ export default function Results() {
           <p>
             <strong>Finding:</strong> KG message passing does not improve indication AUPRC on
             either split in this scaled reproduction. On the standard split, the no-KG model
-            outperforms the KG model (0.893 vs 0.825). On the zero-shot split, results are within
-            noise for indication (0.704 vs 0.714); the KG model is better for contraindication
-            (0.831 vs 0.725). This result is reported as-is per the ground rules.
+            outperforms the KG model (<MonoNum>0.893</MonoNum> vs <MonoNum>0.825</MonoNum>). On
+            the zero-shot split, results are within noise for indication (
+            <MonoNum>0.704</MonoNum> vs <MonoNum>0.714</MonoNum>); the KG model is better for
+            contraindication (<MonoNum>0.831</MonoNum> vs <MonoNum>0.725</MonoNum>). This result
+            is reported as-is per the ground rules.
           </p>
         </div>
 
@@ -107,16 +185,17 @@ export default function Results() {
         />
 
         <h3>Detailed Q1 Table</h3>
+        <TableLegend />
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Model</th>
                 <th>Split</th>
-                <th>AUPRC ind (mean±std)</th>
-                <th>AUPRC contra (mean±std)</th>
-                <th>AUROC ind</th>
-                <th>AUROC contra</th>
+                <th className="col-indication">AUPRC ind (mean±std)</th>
+                <th className="col-contra">AUPRC contra (mean±std)</th>
+                <th className="col-indication">AUROC ind</th>
+                <th className="col-contra">AUROC contra</th>
                 <th>Wall-clock (s)</th>
               </tr>
             </thead>
@@ -127,11 +206,11 @@ export default function Results() {
                   <td className={r.split === 'zeroshot' ? 'tag-zeroshot' : 'tag-standard'}>
                     {r.split === 'zeroshot' ? 'zero-shot' : 'standard'}
                   </td>
-                  <td>{fmt(r.auprc_ind, r.auprc_ind_std)}</td>
-                  <td>{fmt(r.auprc_contra, r.auprc_contra_std)}</td>
-                  <td>{fmt(r.auroc_ind, r.auroc_ind_std)}</td>
-                  <td>{fmt(r.auroc_contra, r.auroc_contra_std)}</td>
-                  <td>{r.wall_s !== null ? r.wall_s : '—'}</td>
+                  <td><MonoNum>{fmt(r.auprc_ind, r.auprc_ind_std)}</MonoNum></td>
+                  <td><MonoNum>{fmt(r.auprc_contra, r.auprc_contra_std)}</MonoNum></td>
+                  <td><MonoNum>{fmt(r.auroc_ind, r.auroc_ind_std)}</MonoNum></td>
+                  <td><MonoNum>{fmt(r.auroc_contra, r.auroc_contra_std)}</MonoNum></td>
+                  <td><MonoNum>{r.wall_s !== null ? r.wall_s : '—'}</MonoNum></td>
                 </tr>
               ))}
             </tbody>
@@ -147,8 +226,8 @@ export default function Results() {
           Auto-generated from <code>results/metrics/comparison_table.csv</code>. All models,
           both splits, seeds [42, 0, 1]. Random-negative AUPRC (1:5 ratio). The{' '}
           <span className="badge badge-paper">paper_reported</span> column shows values from
-          Huang et al. (2024), Nature Medicine, Supplementary Tables S1–S2. Never merged with our
-          numbers.
+          Huang et al. (2024), Nature Medicine, Supplementary Tables S1&ndash;S2. Never merged
+          with our numbers.
         </p>
 
         {paperNote && (
@@ -159,8 +238,10 @@ export default function Results() {
           </div>
         )}
 
-        <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <span style={{ lineHeight: '2', marginRight: '0.5rem' }}>Filter split:</span>
+        <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ lineHeight: '2', marginRight: '0.5rem', fontSize: '0.875rem', color: 'var(--structure)' }}>
+            Filter split:
+          </span>
           {['all', 'standard', 'zeroshot'].map((s) => (
             <button
               key={s}
@@ -168,12 +249,14 @@ export default function Results() {
               aria-pressed={splitFilter === s}
               style={{
                 padding: '0.3rem 0.75rem',
-                border: '1px solid #1a4e8a',
-                borderRadius: '4px',
+                border: '1px solid var(--accent)',
+                borderRadius: 'var(--radius)',
                 cursor: 'pointer',
-                background: splitFilter === s ? '#1a4e8a' : '#fff',
-                color: splitFilter === s ? '#fff' : '#1a4e8a',
-                fontSize: '0.875rem',
+                background: splitFilter === s ? 'var(--accent)' : 'var(--paper-raised)',
+                color: splitFilter === s ? '#fff' : 'var(--accent)',
+                fontSize: '0.8125rem',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: splitFilter === s ? 600 : 400,
               }}
             >
               {s === 'all' ? 'All' : s === 'zeroshot' ? 'Zero-Shot' : 'Standard'}
@@ -188,16 +271,17 @@ export default function Results() {
             return (
               <div key={split}>
                 <h3>{split === 'zeroshot' ? 'Zero-Shot Split' : 'Standard Split'}</h3>
+                <TableLegend />
                 <div className="table-wrap">
                   <table>
                     <thead>
                       <tr>
                         <th>Model</th>
                         <th>Type</th>
-                        <th>AUPRC ind (scaled)</th>
-                        <th>AUPRC ind (paper)</th>
-                        <th>AUPRC contra (scaled)</th>
-                        <th>AUPRC contra (paper)</th>
+                        <th className="col-indication">AUPRC ind (scaled)</th>
+                        <th className="col-indication">AUPRC ind (paper)</th>
+                        <th className="col-contra">AUPRC contra (scaled)</th>
+                        <th className="col-contra">AUPRC contra (paper)</th>
                         <th>Wall-clock (s)</th>
                       </tr>
                     </thead>
@@ -220,37 +304,15 @@ export default function Results() {
                                 {r.reproduction_type}
                               </span>
                             </td>
-                            <td>{fmt(r.auprc_ind, r.auprc_ind_std)}</td>
+                            <td><MonoNum>{fmt(r.auprc_ind, r.auprc_ind_std)}</MonoNum></td>
                             <td>
-                              {pr?.auprc_ind ? (
-                                <span>
-                                  {pr.auprc_ind}{' '}
-                                  <span className="badge badge-paper">paper</span>
-                                </span>
-                              ) : split === 'zeroshot' && (r.model === 'txgnn_two_phase' || r.model === 'txgnn_attn_on') ? (
-                                <span style={{ fontSize: '0.8rem', color: '#555' }}>
-                                  relative only: +19.0% (abs. in Suppl. S1)
-                                </span>
-                              ) : (
-                                '—'
-                              )}
+                              <PaperCell pr={pr} model={r.model} split={split} />
                             </td>
-                            <td>{fmt(r.auprc_contra, r.auprc_contra_std)}</td>
+                            <td><MonoNum>{fmt(r.auprc_contra, r.auprc_contra_std)}</MonoNum></td>
                             <td>
-                              {pr?.auprc_contra ? (
-                                <span>
-                                  {pr.auprc_contra}{' '}
-                                  <span className="badge badge-paper">paper</span>
-                                </span>
-                              ) : split === 'zeroshot' && (r.model === 'txgnn_two_phase' || r.model === 'txgnn_attn_on') ? (
-                                <span style={{ fontSize: '0.8rem', color: '#555' }}>
-                                  relative only: +23.9% (abs. in Suppl. S2)
-                                </span>
-                              ) : (
-                                '—'
-                              )}
+                              <PaperContraCell pr={pr} model={r.model} split={split} />
                             </td>
-                            <td>{r.wall_s !== null ? r.wall_s : '—'}</td>
+                            <td><MonoNum>{r.wall_s !== null ? r.wall_s : '—'}</MonoNum></td>
                           </tr>
                         )
                       })}
@@ -266,7 +328,7 @@ export default function Results() {
           extra="paper_reported: Huang et al. 2024, Nat Med, Suppl. Tables S1-S2 (MOESM1 ESM)"
         />
 
-        <p style={{ fontSize: '0.85rem', color: '#555' }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--structure)', fontFamily: 'var(--font-mono)' }}>
           Note: <code>txgnn_two_phase</code> and <code>txgnn_attn_on</code> are the same model —
           both rows are included as the CSV contains both. The table includes only models where all
           results are available (rows with &ldquo;[NOT YET RUN]&rdquo; are excluded).

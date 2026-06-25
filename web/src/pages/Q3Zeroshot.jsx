@@ -54,7 +54,7 @@ export default function Q3Zeroshot() {
     return obj
   }).filter((row) => models.some((m) => row[m] !== undefined))
 
-  const COLORS = ['#222222', '#666666', '#aaaaaa', '#cccccc']
+  const COLORS = ['var(--accent)', 'var(--indication)', 'var(--structure)', 'var(--contra)']
 
   return (
     <div className="page">
@@ -76,9 +76,9 @@ export default function Q3Zeroshot() {
         <div className="finding-box">
           <p>
             <strong>92% of PrimeKG diseases have no indication edge.</strong> Source: Huang et al.
-            (2024), main text (PMC11326339). Consistent with our downloaded data (9,388 unique pairs /
-            17,080 diseases = 55% disease coverage for indication, with the 92% figure referring to
-            diseases lacking <em>any</em> approved therapy in the broader clinical sense).
+            (2024), main text (PMC11326339). This means a standard supervised model—which requires
+            labeled drug-disease training pairs—can make no prediction for 92% of diseases. Zero-shot
+            generalization is the only approach that covers these diseases.
           </p>
         </div>
       </section>

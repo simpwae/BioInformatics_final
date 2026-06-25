@@ -84,12 +84,22 @@ export default function Evidence() {
         </p>
       </div>
 
+      <div className="finding-box">
+        <p>
+          <strong>Scope of this study:</strong> All experiments test GNN-based models (HGT
+          architecture). TxGNN is not a large language model. KG-BERT and DRAGON are cited as
+          background context for the LM+KG research direction but are <em>not</em> evaluated or
+          reproduced here — their numbers apply to different datasets (WN18RR, ConceptNet) and
+          cannot be compared to PrimeKG drug repurposing results.
+        </p>
+      </div>
+
       {CITATIONS.map((c) => (
         <section
           key={c.id}
           className="section"
           aria-labelledby={`cite-${c.id}`}
-          style={{ borderTop: '1px solid #d0d0d0', paddingTop: '1.5rem' }}
+          style={{ borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}
         >
           <h2 id={`cite-${c.id}`}>{c.label}</h2>
           <p>

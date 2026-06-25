@@ -22,7 +22,7 @@ function DrugTable({ predictions, source }) {
                 key={i}
                 style={
                   row.is_positive
-                    ? { background: '#edf7f0', fontWeight: 600 }
+                    ? { background: 'var(--indication-muted)', fontWeight: 600 }
                     : {}
                 }
               >
@@ -31,7 +31,7 @@ function DrugTable({ predictions, source }) {
                 <td>
                   <code>{row.drug_id}</code>
                 </td>
-                <td style={{ fontFamily: 'monospace' }}>{row.score?.toFixed(4)}</td>
+                <td style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{row.score?.toFixed(4)}</td>
                 <td>
                   {row.is_positive ? (
                     <span className="positive-badge">Yes</span>
@@ -100,13 +100,14 @@ export default function CaseStudies() {
 
   const btnStyle = (active) => ({
     padding: '0.5rem 1.25rem',
-    border: '1px solid #1a4e8a',
-    borderRadius: '4px',
+    border: '1px solid var(--accent)',
+    borderRadius: 'var(--radius)',
     cursor: 'pointer',
-    background: active ? '#1a4e8a' : '#fff',
-    color: active ? '#fff' : '#1a4e8a',
+    background: active ? 'var(--accent)' : 'var(--paper-raised)',
+    color: active ? '#fff' : 'var(--accent)',
     fontWeight: active ? 600 : 400,
-    fontSize: '0.9rem',
+    fontSize: '0.875rem',
+    fontFamily: 'var(--font-body)',
   })
 
   return (
@@ -117,6 +118,17 @@ export default function CaseStudies() {
         come from model output files in <code>results/predictions/</code>. No numbers typed
         manually.
       </p>
+      <div className="warn-box">
+        <p>
+          <strong>Note on the paper&rsquo;s case studies:</strong> Huang et al. (2024) include
+          their own case studies in the Nature Medicine paper using the full TxGNN (512-dim,
+          pre-trained node features). Those specific case studies cannot be replicated here — the
+          full model exceeds 8&thinsp;GB VRAM and the pre-trained features are not publicly
+          released. The cases below are <em>original</em> case studies on the scaled_reproduction
+          model, chosen from diseases present in our zero-shot test split. They are not presented as
+          replicating the paper&rsquo;s narrative.
+        </p>
+      </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <button style={btnStyle(activeCase === 'caseA')} onClick={() => setActiveCase('caseA')}>
